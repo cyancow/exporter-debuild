@@ -1,0 +1,55 @@
+#!/usr/bin/make -f
+
+DEBVERS    ?= $(shell dpkg-parsechangelog -SVersion)
+VERSION    ?= $(shell echo '$(DEBVERS)' | sed 's/^[[:digit:]]*://; s/[-].*//')
+DEBPKGNAME ?= $(shell dpkg-parsechangelog -SSource)
+DEBDATE    ?= $(shell dpkg-parsechangelog -SDate)
+
+DEB_HOST_ARCH_OS := $(shell dpkg-architecture -qDEB_HOST_ARCH_OS)
+BUILD_DATE := $(shell dpkg-parsechangelog --show-field Date)
+
+define checkdir
+	test -f debian/rules
+endef
+
+clean:
+	$(checkdir)
+	rm -rf debian/node-exporter debian/files
+
+binary-indep:
+
+binary-arch: checkroot
+	$(checkdir)
+	rm  -rf debian/node-exporter
+	install -m 755 -d debian/node-exporter/DEBIAN \
+                 -d debian/node-exporter/usr \
+                 -d debian/node-exporter/usr/bin \
+                 -d debian/node-exporter/etc \
+                 -d debian/node-exporter/etc/default \
+                 -d debian/node-exporter/etc/init
+	install -m 644 debian/conffiles debian/node-exporter/DEBIAN
+	install -m 755 debian/postrm debian/node-exporter/DEBIAN
+	install -m 755 debian/postinst debian/node-exporter/DEBIAN
+	install -m 755 debian/prerm debian/node-exporter/DEBIAN
+	install -m 644 node-exporter.conf debian/node-exporter/etc/init
+	install -m 644 node-exporter.default debian/node-exporter/etc/default/node-exporter
+	install -m 755 node_exporter debian/node-exporter/usr/bin/node_exporter
+	strip -R .comment -R .note debian/node-exporter/usr/bin/node_exporter
+	cd debian/node-exporter && find . -type f ! -regex '.*DEBIAN/.*' -printf '%P\0' | LC_ALL=C sort -z | xargs -r0 md5sum > DEBIAN/md5sums
+	dpkg-gencontrol -v$(DEBVERS) -T -pnode-exporter -Pdebian/node-exporter
+	find debian/node-exporter -depth -newermt '$(BUILD_DATE)' -print0 | xargs -0r touch --no-dereference --date='$(BUILD_DATE)'
+	chown -R root.root debian/node-exporter
+	chmod -R g-ws debian/node-exporter
+	dpkg --build debian/node-exporter ..
+
+
+binary: binary-arch
+
+build:
+build-arch:
+build-indep:
+
+checkroot:
+	test root = "`whoami`"
+
+.PHONY: build clean binary-indep build-arch binary checkroot

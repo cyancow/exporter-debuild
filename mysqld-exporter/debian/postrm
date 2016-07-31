@@ -1,0 +1,7 @@
+#!/bin/sh
+set -e
+
+if [ purge = "$1" ]; then
+	rm /etc/init/mysqld-exporter.conf
+	rm /etc/default/mysqld-exporter
+fi
