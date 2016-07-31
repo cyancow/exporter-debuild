@@ -1,0 +1,58 @@
+#!/usr/bin/make -f
+
+DEBVERS    ?= $(shell dpkg-parsechangelog -SVersion)
+VERSION    ?= $(shell echo '$(DEBVERS)' | sed 's/^[[:digit:]]*://; s/[-].*//')
+DEBPKGNAME ?= $(shell dpkg-parsechangelog -SSource)
+DEBDATE    ?= $(shell dpkg-parsechangelog -SDate)
+
+DEB_HOST_ARCH_OS := $(shell dpkg-architecture -qDEB_HOST_ARCH_OS)
+BUILD_DATE := $(shell dpkg-parsechangelog --show-field Date)
+
+define checkdir
+	test -f debian/rules
+endef
+
+clean:
+	$(checkdir)
+	rm -rf debian/prometheus debian/files
+
+binary-indep:
+
+binary-arch: checkroot
+	$(checkdir)
+	rm  -rf debian/prometheus
+	install -m 755 -d debian/prometheus/DEBIAN \
+                 -d debian/prometheus/usr \
+                 -d debian/prometheus/usr/bin \
+                 -d debian/prometheus/etc \
+                 -d debian/prometheus/etc/init \
+                 -d debian/prometheus/etc/prometheus \
+                 -d debian/prometheus/etc/prometheus/console_libraries \
+                 -d debian/prometheus/etc/prometheus/consoles
+	install -m 644 debian/conffiles debian/prometheus/DEBIAN
+	install -m 644 consoles/* -t  debian/prometheus/etc/prometheus/consoles/
+	install -m 644 console_libraries/* -t debian/prometheus/etc/prometheus/console_libraries/
+	install -m 644 prometheus.yml debian/prometheus/etc/prometheus/prometheus.yml
+	install -m 644 prometheus.conf debian/prometheus/etc/init
+	install -m 755 debian/postinst debian/prometheus/DEBIAN
+	install -m 755 debian/postrm debian/prometheus/DEBIAN
+	install -m 755 prometheus debian/prometheus/usr/bin/prometheus
+	strip -R .comment -R .note debian/prometheus/usr/bin/prometheus
+	cd debian/prometheus && find . -type f ! -regex '.*DEBIAN/.*' -printf '%P\0' | LC_ALL=C sort -z | xargs -r0 md5sum > DEBIAN/md5sums
+	dpkg-gencontrol -v$(DEBVERS) -T -pprometheus -Pdebian/prometheus
+	find debian/prometheus -depth -newermt '$(BUILD_DATE)' -print0 | xargs -0r touch --no-dereference --date='$(BUILD_DATE)'
+	chown -R root.root debian/prometheus
+	chmod -R g-ws debian/prometheus
+	dpkg --build debian/prometheus ..
+
+
+binary: binary-arch
+
+build:
+build-arch:
+build-indep:
+
+checkroot:
+	test root = "`whoami`"
+
+.PHONY: build clean binary-indep build-arch binary checkroot

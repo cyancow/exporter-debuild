@@ -1,0 +1,6 @@
+alertmanager (0.3.0-1) trusty; urgency=low
+
+  * Prometheus alertmanager 0.3.0-1 release
+
+ -- Kaija Chang <kaija.chang@gmail.com>  Mon, 1 Aug 2016 00:00:00 +0800
+
