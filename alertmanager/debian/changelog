@@ -1,6 +1,6 @@
-alertmanager (0.3.0-1) trusty; urgency=low
+alertmanager (0.3.0-97eca6d) trusty; urgency=low
 
-  * Prometheus alertmanager 0.3.0-1 release
+  * Prometheus alertmanager 0.3.0-97eca6d release
 
  -- Kaija Chang <kaija.chang@gmail.com>  Mon, 1 Aug 2016 00:00:00 +0800
 
