@@ -2,6 +2,6 @@
 set -e
 
 if [ purge = "$1" ]; then
-	rm /etc/init/node-exporter.conf
-	rm /etc/default/node-exporter
+	rm -rf /etc/init/node-exporter.conf
+	rm -rf /etc/default/node-exporter
 fi

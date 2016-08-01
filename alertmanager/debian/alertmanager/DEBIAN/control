@@ -1,8 +1,8 @@
 Package: alertmanager
-Version: 0.3.0-1
+Version: 0.3.0-97eca6d
 Architecture: amd64
 Maintainer: Kaija Chang <kaija.chang@gmail.com>
-Installed-Size: 9631
+Installed-Size: 9645
 Section: net
 Priority: extra
 Description: Alertmanager for Prometheus

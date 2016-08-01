@@ -2,6 +2,6 @@
 set -e
 
 if [ purge = "$1" ]; then
-	rm /etc/init/pushgateway.conf
-	rm /etc/default/pushgateway
+	rm -rf /etc/init/pushgateway.conf
+	rm -rf /etc/default/pushgateway
 fi
