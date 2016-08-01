@@ -1,1 +1,3 @@
 /etc/alertmanager/alertmanager.yml
+/etc/init/alertmanager.conf
+/etc/default/alertmanager

@@ -25,9 +25,13 @@ binary-arch: checkroot
                  -d debian/alertmanager/usr \
                  -d debian/alertmanager/usr/bin \
                  -d debian/alertmanager/etc \
+		 -d debian/alertmanager/etc/default \
+		 -d debian/alertmanager/etc/init \
                  -d debian/alertmanager/etc/alertmanager
 	install -m 644 debian/conffiles debian/alertmanager/DEBIAN
 	install -m 644 simple.yml debian/alertmanager/etc/alertmanager/alertmanager.yml
+	install -m 644 alertmanager.conf debian/alertmanager/etc/init
+	install -m 644 alertmanager.default debian/alertmanager/etc/default/alertmanager
 	install -m 755 debian/postinst debian/alertmanager/DEBIAN
 	install -m 755 debian/postrm debian/alertmanager/DEBIAN
 	install -m 755 alertmanager debian/alertmanager/usr/bin/alertmanager
