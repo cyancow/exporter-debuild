@@ -1,0 +1,55 @@
+#!/usr/bin/make -f
+
+DEBVERS    ?= $(shell dpkg-parsechangelog -SVersion)
+VERSION    ?= $(shell echo '$(DEBVERS)' | sed 's/^[[:digit:]]*://; s/[-].*//')
+DEBPKGNAME ?= $(shell dpkg-parsechangelog -SSource)
+DEBDATE    ?= $(shell dpkg-parsechangelog -SDate)
+
+DEB_HOST_ARCH_OS := $(shell dpkg-architecture -qDEB_HOST_ARCH_OS)
+BUILD_DATE := $(shell dpkg-parsechangelog --show-field Date)
+
+define checkdir
+	test -f debian/rules
+endef
+
+clean:
+	$(checkdir)
+	rm -rf debian/pushgateway debian/files
+
+binary-indep:
+
+binary-arch: checkroot
+	$(checkdir)
+	rm  -rf debian/pushgateway
+	install -m 755 -d debian/pushgateway/DEBIAN \
+                 -d debian/pushgateway/usr \
+                 -d debian/pushgateway/usr/bin \
+                 -d debian/pushgateway/etc \
+                 -d debian/pushgateway/etc/default \
+                 -d debian/pushgateway/etc/init
+	install -m 644 debian/conffiles debian/pushgateway/DEBIAN
+	install -m 755 debian/postrm debian/pushgateway/DEBIAN
+	install -m 755 debian/postinst debian/pushgateway/DEBIAN
+	install -m 755 debian/prerm debian/pushgateway/DEBIAN
+	install -m 644 pushgateway.conf debian/pushgateway/etc/init
+	install -m 644 pushgateway.default debian/pushgateway/etc/default/pushgateway
+	install -m 755 pushgateway debian/pushgateway/usr/bin/pushgateway
+	strip -R .comment -R .note debian/pushgateway/usr/bin/pushgateway
+	cd debian/pushgateway && find . -type f ! -regex '.*DEBIAN/.*' -printf '%P\0' | LC_ALL=C sort -z | xargs -r0 md5sum > DEBIAN/md5sums
+	dpkg-gencontrol -v$(DEBVERS) -T -ppushgateway -Pdebian/pushgateway
+	find debian/pushgateway -depth -newermt '$(BUILD_DATE)' -print0 | xargs -0r touch --no-dereference --date='$(BUILD_DATE)'
+	chown -R root.root debian/pushgateway
+	chmod -R g-ws debian/pushgateway
+	dpkg --build debian/pushgateway ..
+
+
+binary: binary-arch
+
+build:
+build-arch:
+build-indep:
+
+checkroot:
+	test root = "`whoami`"
+
+.PHONY: build clean binary-indep build-arch binary checkroot
